@@ -8,6 +8,7 @@ use App\Models\Job; // Import the Job model
 use App\Models\Team; // Ensure Team model is imported
 use App\Models\Tool; // Ensure Tool model is imported
 use App\Models\Product; // Ensure Product model is imported
+use App\Models\Invoice; // Ensure Product model is imported
 
 class CustomerController extends Controller
 {
@@ -90,10 +91,94 @@ public function getAllJobs()
 
 public function getAllProducts()
 {
-    $products = Product::all(); // Ensure Product model is properly set up
+    $products = Product::all(); 
     return response()->json($products);
 }
 
+public function getProductById($id)
+{
+    $product = Product::find($id);
+
+    if (!$product) {
+        return response()->json(['error' => 'Product not found'], 404);
+    }
+
+    return response()->json($product);
+}
+
+// Create a new product
+public function createProduct(Request $request)
+{
+
+ 
+
+
+    $request->validate([
+        'ProductDetail' => 'required|string|max:255',  // Use camelCase
+        'Cost' => 'required|numeric',
+        'QuickSelectOption' => 'required|boolean',
+    ]);
+
+    $product = Product::create([
+        'ProductDetail' => $request->ProductDetail,
+        'Cost' => $request->Cost,
+        'QuickSelectOption' => $request->QuickSelectOption,
+    ]);
+
+    return response()->json($product, 201); // 201 Created
+}
+
+public function updateProduct(Request $request, $id)
+{
+    
+    $product = Product::find($id);
+
+    if (!$product) {
+        return response()->json(['error' => 'Product not found'], 404);
+    }
+
+    $validatedData = $request->validate([
+        'ProductDetail' => 'required|string|max:255',  // Use camelCase
+        'Cost' => 'required|numeric',
+        'QuickSelectOption' => 'required|boolean',
+    ]);
+
+    \Log::info('Validated Data: ', $validatedData);
+    \Log::info('Product Before Update: ', $product->toArray());
+    \DB::enableQueryLog();
+
+    // Map the fields to PascalCase for the database
+    $product->update([
+        'ProductDetail' => $validatedData['ProductDetail'],
+        'Cost' => $validatedData['Cost'],
+        'QuickSelectOption' => $validatedData['QuickSelectOption'],
+    ]);
+    \Log::info(\DB::getQueryLog());
+
+    return response()->json($product, 200);
+}
+
+
+
+// Delete a product
+public function deleteProduct($id)
+{
+    $product = Product::find($id);
+
+    if (!$product) {
+        return response()->json(['error' => 'Product not found'], 404);
+    }
+
+    $product->delete();
+
+    return response()->json(['message' => 'Product deleted successfully']);
+}
+
+public function getAllInvoices()
+{
+    $invoices = Invoice::all(); 
+    return response()->json($invoices);
+}
 
 
 }
